@@ -7,7 +7,8 @@ maps to a specific MATLAB argument constraint:
     NonEmptyStr -> (1,1) string   (non-empty general string)
     PageNumber  -> (1,1) double   (integer >= 1)
     PageSize    -> (1,1) double   (integer >= 1)
-    Scope       -> {mustBeMember} (Literal enum)
+    Scope       -> visibility keyword ('public'/'private'/'all') OR a
+                   comma-separated list of 24-hex dataset ids (MATLAB parity)
     FilePath    -> {mustBeFile}   (file must exist on disk)
 
 Usage::
@@ -54,7 +55,9 @@ def _check_scope(v: str) -> str:
         return v
     parts = [p.strip() for p in v.split(",") if p.strip()]
     if parts and all(_OBJECTID_RE.match(p) for p in parts):
-        return v
+        # Return the NORMALIZED list (stripped, empty segments dropped) so a
+        # stray space or trailing comma isn't forwarded verbatim to the cloud.
+        return ",".join(parts)
     raise ValueError(
         f"scope must be one of {_SCOPE_KEYWORDS} or a comma-separated list of "
         f"24-character hex dataset ids; got {v!r}"
